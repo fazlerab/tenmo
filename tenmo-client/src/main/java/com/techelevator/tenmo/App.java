@@ -6,12 +6,9 @@ import com.techelevator.tenmo.model.UserCredentials;
 import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.ConsoleService;
 import com.techelevator.tenmo.services.MoneyTransferService;
-import org.apiguardian.api.API;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class App {
@@ -115,16 +112,24 @@ public class App {
 		// TODO Auto-generated method stub
         User[] users = moneyTransferService.getOtherUsers(currentUser.getUser().getId());
         consoleService.printUsers(users);
-        int id = consoleService.promptForMenuSelection("Enter ID of user you are sending to (0 to cancel):");
-        Long sendUserId = Long.valueOf(id);
 
-        if (validateUserId(users, sendUserId) ) {
-            BigDecimal amount =  consoleService.promptForBigDecimal("Enter Amount: ");
-            if (validatefAmount(amount)) {
-
-            }
-
+        int choice = consoleService.promptForMenuSelection("Enter ID of user you are sending to (0 to cancel):");
+        if (choice == 0) {
+            System.out.println("Transaction canceled.");
+            return;
         }
+        Long sendToUserId = Long.valueOf(choice);
+        if (!isUserIdValid(users, sendToUserId)) {
+            return;
+        }
+
+        BigDecimal amount =  consoleService.promptForBigDecimal("Enter Amount: ");
+        BigDecimal balance = moneyTransferService.getBalanceByUserId(currentUser.getUser().getId());
+        if (!isAmountValid(amount, balance)) {
+            return;
+        }
+
+
 	}
 
 	private void requestBucks() {
@@ -132,39 +137,31 @@ public class App {
 		
 	}
 
-    private boolean validateUserId(User[] users, Long sendUserId) {
+    private boolean isUserIdValid(User[] users, Long sendUserId) {
         Set<Long> userIdSet = new HashSet<>();
         for (User u: users) {
             userIdSet.add(u.getId());
         }
 
-        boolean valid = true;
-        if (sendUserId == 0) {
-            System.out.println("Transcation canceled.");
-            valid = false;
-        }
-        else if (!userIdSet.contains(sendUserId)) {
+        if (!userIdSet.contains(sendUserId)) {
             consoleService.printErrorMessage("You have selected an invalid user Id.");
-            valid = false;
+            return false;
         }
-        return valid;
+        return true;
     }
 
-    private boolean validatefAmount(BigDecimal amount) {
-        BigDecimal balance = moneyTransferService.getBalanceByUserId(currentUser.getUser().getId());
+    private boolean isAmountValid(BigDecimal amount, BigDecimal balance) {
         BigDecimal zero = new BigDecimal("0.0");
-
-        boolean valid = true;
-
         if (amount.compareTo(zero) <= 0) {
-            System.out.println("Invalid amount.");
-            valid = false;
-        }
-        else if (balance.compareTo(zero) <= 0 || amount.compareTo(balance) > 0) {
-            System.out.println("Insufficient fund.");
-            valid = false;
+            System.out.println("You have entered invalid amount.");
+            return false;
         }
 
-        return valid;
+        if (amount.compareTo(balance) > 0) {
+            System.out.println("You have insufficient fund.");
+            return false;
+        }
+
+        return true;
     }
 }
