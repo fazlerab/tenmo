@@ -1,6 +1,7 @@
 package com.techelevator.tenmo.services;
 
 
+import com.techelevator.tenmo.model.User;
 import com.techelevator.tenmo.model.UserCredentials;
 
 import java.math.BigDecimal;
@@ -84,8 +85,25 @@ public class ConsoleService {
         scanner.nextLine();
     }
 
+    public void printUsers(User[] users) {
+        System.out.println();
+        System.out.println("----------------------------");
+        System.out.println("User");
+        System.out.println("Id          Name");
+        System.out.println("----------------------------");
+        for (User u: users) {
+            System.out.println(u.getId() + "       " + u.getUsername());
+        }
+        System.out.println();
+    }
+
     public void printErrorMessage() {
         System.out.println("An error occurred. Check the log for details.");
     }
+
+    public void printErrorMessage(String errMessage) {
+        System.out.println(errMessage);
+    }
+
 
 }

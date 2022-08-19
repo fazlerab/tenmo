@@ -1,9 +1,18 @@
 package com.techelevator.tenmo;
 
 import com.techelevator.tenmo.model.AuthenticatedUser;
+import com.techelevator.tenmo.model.User;
 import com.techelevator.tenmo.model.UserCredentials;
 import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.ConsoleService;
+import com.techelevator.tenmo.services.MoneyTransferService;
+import org.apiguardian.api.API;
+
+import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class App {
 
@@ -11,6 +20,7 @@ public class App {
 
     private final ConsoleService consoleService = new ConsoleService();
     private final AuthenticationService authenticationService = new AuthenticationService(API_BASE_URL);
+    private final MoneyTransferService moneyTransferService = new MoneyTransferService(API_BASE_URL);
 
     private AuthenticatedUser currentUser;
 
@@ -57,6 +67,8 @@ public class App {
         currentUser = authenticationService.login(credentials);
         if (currentUser == null) {
             consoleService.printErrorMessage();
+        } else {
+            moneyTransferService.setAuthToken(currentUser.getToken());
         }
     }
 
@@ -85,8 +97,8 @@ public class App {
     }
 
 	private void viewCurrentBalance() {
-		// TODO Auto-generated method stub
-		
+        BigDecimal balance = moneyTransferService.getBalanceByUserId(currentUser.getUser().getId());
+		System.out.println("Your current balance is: $" + balance.toString());
 	}
 
 	private void viewTransferHistory() {
@@ -101,7 +113,18 @@ public class App {
 
 	private void sendBucks() {
 		// TODO Auto-generated method stub
-		
+        User[] users = moneyTransferService.getOtherUsers(currentUser.getUser().getId());
+        consoleService.printUsers(users);
+        int id = consoleService.promptForMenuSelection("Enter ID of user you are sending to (0 to cancel):");
+        Long sendUserId = Long.valueOf(id);
+
+        if (validateUserId(users, sendUserId) ) {
+            BigDecimal amount =  consoleService.promptForBigDecimal("Enter Amount: ");
+            if (validatefAmount(amount)) {
+
+            }
+
+        }
 	}
 
 	private void requestBucks() {
@@ -109,4 +132,39 @@ public class App {
 		
 	}
 
+    private boolean validateUserId(User[] users, Long sendUserId) {
+        Set<Long> userIdSet = new HashSet<>();
+        for (User u: users) {
+            userIdSet.add(u.getId());
+        }
+
+        boolean valid = true;
+        if (sendUserId == 0) {
+            System.out.println("Transcation canceled.");
+            valid = false;
+        }
+        else if (!userIdSet.contains(sendUserId)) {
+            consoleService.printErrorMessage("You have selected an invalid user Id.");
+            valid = false;
+        }
+        return valid;
+    }
+
+    private boolean validatefAmount(BigDecimal amount) {
+        BigDecimal balance = moneyTransferService.getBalanceByUserId(currentUser.getUser().getId());
+        BigDecimal zero = new BigDecimal("0.0");
+
+        boolean valid = true;
+
+        if (amount.compareTo(zero) <= 0) {
+            System.out.println("Invalid amount.");
+            valid = false;
+        }
+        else if (balance.compareTo(zero) <= 0 || amount.compareTo(balance) > 0) {
+            System.out.println("Insufficient fund.");
+            valid = false;
+        }
+
+        return valid;
+    }
 }

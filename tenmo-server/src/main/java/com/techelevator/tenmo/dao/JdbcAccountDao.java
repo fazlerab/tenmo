@@ -8,7 +8,11 @@ import java.math.BigDecimal;
 @Component
 public class JdbcAccountDao implements AccountDao {
 
-    private JdbcTemplate jdbcTemplate = new JdbcTemplate();
+    private JdbcTemplate jdbcTemplate;
+
+    public JdbcAccountDao(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     @Override
     public BigDecimal getBalanceByUserId(Long id) {

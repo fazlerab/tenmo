@@ -1,2 +1,7 @@
-package com.techelevator.tenmo.dao;public class AccountDao {
+package com.techelevator.tenmo.dao;
+
+import java.math.BigDecimal;
+
+public interface AccountDao {
+    BigDecimal getBalanceByUserId(Long id);
 }
