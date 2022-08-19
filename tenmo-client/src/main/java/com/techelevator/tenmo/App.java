@@ -1,6 +1,7 @@
 package com.techelevator.tenmo;
 
 import com.techelevator.tenmo.model.AuthenticatedUser;
+import com.techelevator.tenmo.model.MoneyTransfer;
 import com.techelevator.tenmo.model.User;
 import com.techelevator.tenmo.model.UserCredentials;
 import com.techelevator.tenmo.services.AuthenticationService;
@@ -129,7 +130,14 @@ public class App {
             return;
         }
 
-
+        MoneyTransfer sendMoney = new MoneyTransfer(currentUser.getUser().getId(), sendToUserId, amount, "Send");
+        boolean success = moneyTransferService.send(sendMoney);
+        if (success) {
+            System.out.println("Money transferred successfully.");
+        }
+        else {
+            System.out.println("Money transfer failed.");
+        }
 	}
 
 	private void requestBucks() {

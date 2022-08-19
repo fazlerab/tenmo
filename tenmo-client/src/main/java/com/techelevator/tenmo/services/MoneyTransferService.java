@@ -1,17 +1,14 @@
 package com.techelevator.tenmo.services;
 
+import com.techelevator.tenmo.model.MoneyTransfer;
 import com.techelevator.tenmo.model.User;
 import com.techelevator.util.BasicLogger;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 public class MoneyTransferService {
     private String baseUrl;
@@ -53,9 +50,29 @@ public class MoneyTransferService {
         return otherUsers;
     }
 
+    public boolean send(MoneyTransfer sendMoney) {
+        Boolean success = false;
+        try {
+            ResponseEntity<Boolean> response = restTemplate.exchange(baseUrl + "send",
+                    HttpMethod.POST, makeMoneyTransferEntity(sendMoney), Boolean.class);
+            success = response.getBody();
+        }
+        catch (RestClientResponseException | ResourceAccessException e) {
+            BasicLogger.log(e.getMessage());
+        }
+        return success;
+    }
+
     private HttpEntity<Void> makeEntity() {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(authToken);
         return new HttpEntity<>(headers);
+    }
+
+    private HttpEntity<MoneyTransfer> makeMoneyTransferEntity(MoneyTransfer moneyTransfer) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(authToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return new HttpEntity<>(moneyTransfer, headers);
     }
 }
