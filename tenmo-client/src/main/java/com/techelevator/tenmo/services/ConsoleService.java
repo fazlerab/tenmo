@@ -1,6 +1,7 @@
 package com.techelevator.tenmo.services;
 
 
+import com.techelevator.tenmo.model.TransferDetail;
 import com.techelevator.tenmo.model.User;
 import com.techelevator.tenmo.model.UserCredentials;
 
@@ -105,5 +106,15 @@ public class ConsoleService {
         System.out.println(errMessage);
     }
 
-
+    public void printTransferBasic(TransferDetail[] transferDetails) {
+        System.out.println("----------------------------------------");
+        System.out.println("Pending Tranfers");
+        System.out.println("ID             To              Amount");
+        System.out.println("-----------------------------------------");
+        for(TransferDetail t : transferDetails) {
+            System.out.println(t.getId() + "         " + t.getToUser().getUsername() + "         " + t.getAmount());
+        }
+        System.out.println("---------------------------------");
+        System.out.println();
+    }
 }

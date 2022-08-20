@@ -1,9 +1,6 @@
 package com.techelevator.tenmo;
 
-import com.techelevator.tenmo.model.AuthenticatedUser;
-import com.techelevator.tenmo.model.MoneyTransfer;
-import com.techelevator.tenmo.model.User;
-import com.techelevator.tenmo.model.UserCredentials;
+import com.techelevator.tenmo.model.*;
 import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.ConsoleService;
 import com.techelevator.tenmo.services.MoneyTransferService;
@@ -106,11 +103,14 @@ public class App {
 
 	private void viewPendingRequests() {
 		// TODO Auto-generated method stub
-		
+        TransferDetail[] transferDetails = moneyTransferService.getPendingTransferDetails(currentUser.getUser().getId());
+        System.out.println("size: " + transferDetails.length);
+        consoleService.printTransferBasic(transferDetails);
+        int transferId = consoleService.promptForInt("Please enter transfer ID to approve/reject (0 to cancel): \"");
+
 	}
 
 	private void sendBucks() {
-		// TODO Auto-generated method stub
         User[] users = moneyTransferService.getOtherUsers(currentUser.getUser().getId());
         consoleService.printUsers(users);
 
@@ -130,7 +130,7 @@ public class App {
             return;
         }
 
-        MoneyTransfer sendMoney = new MoneyTransfer(currentUser.getUser().getId(), sendToUserId, amount, "Send");
+        MoneyTransfer sendMoney = new MoneyTransfer(currentUser.getUser().getId(), sendToUserId, amount);
         boolean success = moneyTransferService.send(sendMoney);
         if (success) {
             System.out.println("Money transferred successfully.");

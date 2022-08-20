@@ -7,16 +7,13 @@ public class MoneyTransfer {
     Long toUserId;
     BigDecimal amount;
 
-    String type;
-
     public MoneyTransfer() {
     }
 
-    public MoneyTransfer(Long fromUserId, Long toUserId, BigDecimal amount, String type) {
+    public MoneyTransfer(Long fromUserId, Long toUserId, BigDecimal amount) {
         this.fromUserId = fromUserId;
         this.toUserId = toUserId;
         this.amount = amount;
-        this.type = type;
     }
 
     public Long getFromUserId() {
@@ -42,14 +39,4 @@ public class MoneyTransfer {
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-
 }

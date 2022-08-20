@@ -1,6 +1,7 @@
 package com.techelevator.tenmo.services;
 
 import com.techelevator.tenmo.model.MoneyTransfer;
+import com.techelevator.tenmo.model.TransferDetail;
 import com.techelevator.tenmo.model.User;
 import com.techelevator.util.BasicLogger;
 import org.springframework.http.*;
@@ -63,6 +64,18 @@ public class MoneyTransferService {
         return success;
     }
 
+    public TransferDetail[] getPendingTransferDetails(Long userId) {
+        TransferDetail[] transfers  = null;
+        try {
+            ResponseEntity<TransferDetail[]> response = restTemplate.exchange(baseUrl + "pendings/" + userId,
+                    HttpMethod.GET, makeEntity(), TransferDetail[].class);
+            transfers = response.getBody();
+        } catch (RestClientResponseException | ResourceAccessException e) {
+            BasicLogger.log(e.getMessage());
+        }
+        return transfers;
+    }
+
     private HttpEntity<Void> makeEntity() {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(authToken);
@@ -75,4 +88,5 @@ public class MoneyTransferService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         return new HttpEntity<>(moneyTransfer, headers);
     }
+
 }
