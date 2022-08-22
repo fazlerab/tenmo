@@ -13,4 +13,5 @@ public interface AccountDao {
     TransferDetail[] getTransfers(Long myUserId);
 
     TransferDetail[] getPendingTransfers(Long userId);
+
 }

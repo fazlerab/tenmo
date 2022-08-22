@@ -49,4 +49,9 @@ public class MoneyTransferController {
     public TransferDetail[] getPendingTransfers(@PathVariable Long userId) {
         return accountDao.getPendingTransfers(userId);
     }
+
+    @GetMapping("/transfers/{userId}")
+    public TransferDetail[] getTransfers(@PathVariable Long userId) {
+        return accountDao.getTransfers(userId);
+    }
 }

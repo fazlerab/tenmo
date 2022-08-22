@@ -29,7 +29,14 @@ public class JdbcAccountDao implements AccountDao {
 
     @Override
     public TransferDetail[] getTransfers(Long myUserId) {
-        return null;
+        String sql = "Select transfer_id, transfer_type_id, transfer_status_id, account_from, account_to,"
+                + " amount From transfer Where account_to = ? Or account_from = ?;";
+        SqlRowSet result = jdbcTemplate.queryForRowSet(sql, myUserId, myUserId);
+        List<TransferDetail> transfers = new ArrayList<>();
+        while(result.next()){
+            transfers.add(mapToTransferDetail(result));
+        }
+        return transfers.toArray(new TransferDetail[transfers.size()]);
     }
 
     @Transactional
