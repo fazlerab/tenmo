@@ -131,7 +131,7 @@ public class JdbcAccountDao implements AccountDao {
 
     private Long getTransferTypeId(String type) {
         return jdbcTemplate.queryForObject(
-                "SELECT transfer_type_id FROM transfer_type WHERE transfer_type_desc = ?'",
+                "SELECT transfer_type_id FROM transfer_type WHERE transfer_type_desc = ?;",
                 Long.class, type);
     }
 
