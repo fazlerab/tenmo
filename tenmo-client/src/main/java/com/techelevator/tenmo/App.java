@@ -98,6 +98,24 @@ public class App {
 
 	private void viewTransferHistory() {
 		// TODO Auto-generated method stub
+        TransferDetail[] transferDetails = moneyTransferService.getTransferDetails(currentUser.getUser().getId());
+        consoleService.printTransfers(transferDetails);
+        Long transferId = consoleService.promptForLong("Please enter transfer ID to view details (0 to cancel): ");
+
+        if (transferId == 0) {
+            System.out.println("Transaction canceled.");
+            return;
+        }
+
+        if (!isTransferIdValid(transferDetails, transferId)){
+            return;
+        }
+
+        for(TransferDetail t : transferDetails){
+            if (t.getId().equals(transferId)){
+                consoleService.printTransferDetail(t);
+            }
+        }
 		
 	}
 
@@ -153,6 +171,19 @@ public class App {
 
         if (!userIdSet.contains(sendUserId)) {
             consoleService.printErrorMessage("You have selected an invalid user Id.");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isTransferIdValid(TransferDetail[] transfers, Long transferId) {
+        Set<Long> transferIdSet = new HashSet<>();
+        for (TransferDetail t: transfers) {
+            transferIdSet.add(t.getId());
+        }
+
+        if (!transferIdSet.contains(transferId)) {
+            consoleService.printErrorMessage("You have selected an invalid transfer Id.");
             return false;
         }
         return true;

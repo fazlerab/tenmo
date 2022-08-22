@@ -76,6 +76,18 @@ public class MoneyTransferService {
         return transfers;
     }
 
+    public TransferDetail[] getTransferDetails(Long userId) {
+        TransferDetail[] transfers  = null;
+        try {
+            ResponseEntity<TransferDetail[]> response = restTemplate.exchange(baseUrl + "transfers/" + userId,
+                    HttpMethod.GET, makeEntity(), TransferDetail[].class);
+            transfers = response.getBody();
+        } catch (RestClientResponseException | ResourceAccessException e) {
+            BasicLogger.log(e.getMessage());
+        }
+        return transfers;
+    }
+
     private HttpEntity<Void> makeEntity() {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(authToken);

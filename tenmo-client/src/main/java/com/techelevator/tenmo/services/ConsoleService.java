@@ -6,6 +6,7 @@ import com.techelevator.tenmo.model.User;
 import com.techelevator.tenmo.model.UserCredentials;
 
 import java.math.BigDecimal;
+import java.sql.SQLOutput;
 import java.util.Scanner;
 
 public class ConsoleService {
@@ -81,6 +82,17 @@ public class ConsoleService {
         }
     }
 
+    public Long promptForLong(String prompt) {
+        System.out.print(prompt);
+        while (true) {
+            try {
+                return Long.parseLong(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid Id.");
+            }
+        }
+    }
+
     public void pause() {
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
@@ -116,5 +128,32 @@ public class ConsoleService {
         }
         System.out.println("---------------------------------");
         System.out.println();
+    }
+
+    public void printTransfers(TransferDetail[] transferDetails){
+        System.out.println("----------------------------------------");
+        System.out.println("Transfers");
+        System.out.println("ID             From/To          Amount");
+        System.out.println("----------------------------------------");
+        for(TransferDetail t: transferDetails) {
+            if (t.getType().equals("Send")) {
+                System.out.println(t.getId() + "          " + "From:" + t.getFromUser() + "         " + "$" + t.getAmount());
+            } else if(t.getType().equals("Request")){
+                System.out.println(t.getId() + "          " + "To:" + t.getToUser() + "         " + "$" + t.getAmount());
+            }
+        }
+        System.out.println("-----------------");
+    }
+
+    public void printTransferDetail(TransferDetail transferDetails){
+        System.out.println("------------------------------------------");
+        System.out.println("Transfer Details");
+        System.out.println("------------------------------------------");
+        System.out.println(" Id: " + transferDetails.getId());
+        System.out.println(" From: " + transferDetails.getFromUser());
+        System.out.println(" To: " + transferDetails.getToUser());
+        System.out.println(" Type: " + transferDetails.getType());
+        System.out.println(" Status: " + transferDetails.getStatus());
+        System.out.println(" Amount: $" + transferDetails.getAmount());
     }
 }
