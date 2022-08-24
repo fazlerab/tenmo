@@ -137,9 +137,9 @@ public class ConsoleService {
         System.out.println("----------------------------------------");
         for(TransferDetail t: transferDetails) {
             if (t.getType().equals("Send")) {
-                System.out.println(t.getId() + "          " + "From:" + t.getFromUser() + "         " + "$" + t.getAmount());
+                System.out.println(t.getId() + "          " + "From:" + t.getFromUser().getUsername() + "         " + "$" + t.getAmount());
             } else if(t.getType().equals("Request")){
-                System.out.println(t.getId() + "          " + "To:" + t.getToUser() + "         " + "$" + t.getAmount());
+                System.out.println(t.getId() + "          " + "To:" + t.getToUser().getUsername() + "         " + "$" + t.getAmount());
             }
         }
         System.out.println("-----------------");
@@ -150,8 +150,8 @@ public class ConsoleService {
         System.out.println("Transfer Details");
         System.out.println("------------------------------------------");
         System.out.println(" Id: " + transferDetails.getId());
-        System.out.println(" From: " + transferDetails.getFromUser());
-        System.out.println(" To: " + transferDetails.getToUser());
+        System.out.println(" From: " + transferDetails.getFromUser().getUsername());
+        System.out.println(" To: " + transferDetails.getToUser().getUsername());
         System.out.println(" Type: " + transferDetails.getType());
         System.out.println(" Status: " + transferDetails.getStatus());
         System.out.println(" Amount: $" + transferDetails.getAmount());
