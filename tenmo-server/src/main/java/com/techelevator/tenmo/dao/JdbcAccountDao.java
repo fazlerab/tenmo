@@ -30,8 +30,10 @@ public class JdbcAccountDao implements AccountDao {
     @Override
     public TransferDetail[] getTransfers(Long myUserId) {
         String sql = "Select transfer_id, transfer_type_id, transfer_status_id, account_from, account_to,"
-                + " amount From transfer Where account_to = ? Or account_from = ?;";
-        SqlRowSet result = jdbcTemplate.queryForRowSet(sql, myUserId, myUserId);
+                + " amount From transfer t Join account a On a.account_id = t.account_from Or a.account_id = t.account_to " +
+                " Where a.user_id = ?;";
+
+        SqlRowSet result = jdbcTemplate.queryForRowSet(sql, myUserId);
         List<TransferDetail> transfers = new ArrayList<>();
         while(result.next()){
             transfers.add(mapToTransferDetail(result));
