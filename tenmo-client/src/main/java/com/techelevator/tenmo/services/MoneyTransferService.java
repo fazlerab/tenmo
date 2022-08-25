@@ -1,5 +1,6 @@
 package com.techelevator.tenmo.services;
 
+import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.MoneyTransfer;
 import com.techelevator.tenmo.model.TransferDetail;
 import com.techelevator.tenmo.model.User;
@@ -64,6 +65,19 @@ public class MoneyTransferService {
         return success;
     }
 
+    public boolean request(MoneyTransfer sendMoney) {
+        Boolean success = false;
+        try {
+            ResponseEntity<Boolean> response = restTemplate.exchange(baseUrl + "request",
+                    HttpMethod.POST, makeMoneyTransferEntity(sendMoney), Boolean.class);
+            success = response.getBody();
+        }
+        catch (RestClientResponseException | ResourceAccessException e) {
+            BasicLogger.log(e.getMessage());
+        }
+        return success;
+    }
+
     public TransferDetail[] getPendingTransferDetails(Long userId) {
         TransferDetail[] transfers  = null;
         try {
@@ -86,6 +100,19 @@ public class MoneyTransferService {
             BasicLogger.log(e.getMessage());
         }
         return transfers;
+    }
+
+    public Account getAccountByUserId(long userId){
+        Account account = null;
+        try{
+            ResponseEntity<Account> response =
+                    restTemplate.exchange(this.baseUrl + "users/" + userId + "/account",
+                            HttpMethod.GET, makeEntity(), Account.class);
+            account = response.getBody();
+        }catch (RestClientResponseException | ResourceAccessException e){
+            BasicLogger.log(e.getMessage());
+        }
+        return account;
     }
 
     private HttpEntity<Void> makeEntity() {
