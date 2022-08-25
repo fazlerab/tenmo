@@ -1,5 +1,8 @@
 package com.techelevator.tenmo.dao;
 
+import com.techelevator.tenmo.exceptions.InvalidTransferAmountException;
+import com.techelevator.tenmo.exceptions.TenmoException;
+import com.techelevator.tenmo.exceptions.TransferFailedException;
 import com.techelevator.tenmo.model.MoneyTransfer;
 import com.techelevator.tenmo.model.TEUser;
 import com.techelevator.tenmo.model.TransferDetail;
@@ -61,7 +64,6 @@ public class JdbcAccountDao implements AccountDao {
     public TransferDetail[] getPendingTransfers(Long userId) {
         Long accountId = getAccountId(userId);
         Long transferStatusId = getTransferStatusId("Pending");
-        System.out.println("accountId = " + accountId + "   statusId = " + transferStatusId);
 
         String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount " +
                 "FROM transfer " +
@@ -71,11 +73,48 @@ public class JdbcAccountDao implements AccountDao {
 
         List<TransferDetail> transfers = new ArrayList<>();
         while(rowSet.next()) {
-            System.out.println("in while");
             transfers.add(mapToTransferDetail(rowSet));
         }
 
         return transfers.toArray(new TransferDetail[transfers.size()]);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public boolean approveTransfer(TransferDetail transfer) throws TenmoException {
+        BigDecimal fromUserBalance = getBalanceByUserId(transfer.getFromUser().getId());
+        BigDecimal toUserBalance = getBalanceByUserId(transfer.getToUser().getId());
+
+        if (transfer.getAmount().compareTo(fromUserBalance) > 0) {
+            throw new InvalidTransferAmountException("Not enough balance to approve transfer.");
+        }
+
+        deductFromAccount(transfer.getFromUser().getId(), transfer.getAmount());
+        addToAccount(transfer.getToUser().getId(), transfer.getAmount());
+
+        Long approvedStatusId = getTransferStatusId("Approved");
+        String sql = "UPDATE transfer " +
+                "SET transfer_status_id = ? " +
+                "WHERE transfer_id = ?;";
+        int rows = jdbcTemplate.update(sql, approvedStatusId, transfer.getId());
+        if (rows == 0) {
+            throw new TransferFailedException("Transfer approval failed.");
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean rejectTransfer(TransferDetail transfer) throws TenmoException {
+        Long rejectedStatusId = getTransferStatusId("Rejected");
+        String sql = "UPDATE transfer " +
+                "SET transfer_status_id = ? " +
+                "WHERE transfer_id = ?;";
+        int rows = jdbcTemplate.update(sql, rejectedStatusId, transfer.getId());
+        if (rows == 0) {
+            throw new TransferFailedException("Transfer rejection failed.");
+        }
+        return false;
     }
 
     private TransferDetail mapToTransferDetail(SqlRowSet rs) {
@@ -103,18 +142,24 @@ public class JdbcAccountDao implements AccountDao {
                 toAccountId, amount);
     }
 
-    private void addToAccount(Long toAccountId, BigDecimal amount) {
+    private void addToAccount(Long toAccountId, BigDecimal amount) /*throws TenmoException*/ {
         String addToUserAccountSql = "UPDATE account " +
                 "SET balance = balance + ? " +
                 "WHERE account_id = ?;";
         int rows = jdbcTemplate.update(addToUserAccountSql, amount, toAccountId);
+//        if (rows == 0) {
+//            throw new TransferFailedException("Failed to transfer to an account.");
+//        }
     }
 
-    private void deductFromAccount(Long accountId, BigDecimal amount) {
+    private void deductFromAccount(Long accountId, BigDecimal amount) /*throws TenmoException*/ {
         String sql = "UPDATE account " +
                 "SET balance = balance - ? " +
                 "WHERE account_id = ?;";
         int rows = jdbcTemplate.update(sql, amount, accountId);
+//        if (rows == 0) {
+//            throw new TransferFailedException("Failed to transfer from an account.");
+//        }
     }
 
     private Long getTransferStatusId(String status) {
@@ -157,7 +202,6 @@ public class JdbcAccountDao implements AccountDao {
         if (rowSet.next()) {
             user  = new TEUser(rowSet.getLong("user_id"), rowSet.getString("username"));
         }
-        System.out.println("user: " + user);
         return user;
     }
 }

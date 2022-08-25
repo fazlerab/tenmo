@@ -9,6 +9,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
+import java.awt.*;
 import java.math.BigDecimal;
 
 public class MoneyTransferService {
@@ -61,7 +62,7 @@ public class MoneyTransferService {
         catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
         }
-        return success;
+        return success != null && success;
     }
 
     public TransferDetail[] getPendingTransferDetails(Long userId) {
@@ -74,6 +75,31 @@ public class MoneyTransferService {
             BasicLogger.log(e.getMessage());
         }
         return transfers;
+    }
+    
+    public boolean approveTransfer(TransferDetail transfer) {
+        Boolean success = false;
+        try {
+            ResponseEntity<Boolean> response = restTemplate.exchange(baseUrl + "approve", HttpMethod.PUT,
+                    makeTransferDetailEntity(transfer), Boolean.class);
+            success = response.getBody();
+        } catch (RestClientResponseException | ResourceAccessException e) {
+            BasicLogger.log(e.getMessage());
+        }
+
+        return success != null && success;
+    }
+
+    public boolean rejectTransfer(TransferDetail transfer) {
+        Boolean success = false;
+        try {
+            ResponseEntity<Boolean> response = restTemplate.exchange(baseUrl + "approve", HttpMethod.PUT,
+                    makeTransferDetailEntity(transfer), Boolean.class);
+            success = response.getBody();
+        } catch (RestClientResponseException | ResourceAccessException e) {
+            BasicLogger.log(e.getMessage());
+        }
+        return success != null && success;
     }
 
     public TransferDetail[] getTransferDetails(Long userId) {
@@ -101,4 +127,10 @@ public class MoneyTransferService {
         return new HttpEntity<>(moneyTransfer, headers);
     }
 
+    private HttpEntity<TransferDetail> makeTransferDetailEntity(TransferDetail transferDetail) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(authToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return new HttpEntity<>(transferDetail, headers);
+    }
 }

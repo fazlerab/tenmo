@@ -10,6 +10,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class App {
+    private static final int APPROVED = 1;
+    private static final int REJECTED = 2;
 
     private static final String API_BASE_URL = "http://localhost:8080/";
 
@@ -120,12 +122,49 @@ public class App {
 	}
 
 	private void viewPendingRequests() {
-		// TODO Auto-generated method stub
         TransferDetail[] transferDetails = moneyTransferService.getPendingTransferDetails(currentUser.getUser().getId());
-        System.out.println("size: " + transferDetails.length);
-        consoleService.printTransferBasic(transferDetails);
-        int transferId = consoleService.promptForInt("Please enter transfer ID to approve/reject (0 to cancel): \"");
+        consoleService.printPendingTransfers(transferDetails);
+        Long transferId = consoleService.promptForLong("Please enter transfer ID to approve/reject (0 to cancel): ");
 
+        TransferDetail transfer = null;
+        for(TransferDetail t : transferDetails) {
+            if (t.getId().equals(transferId)) {
+                transfer = t;
+                break;
+            }
+        }
+
+        consoleService.printApproveRejectMenu();
+        int action = consoleService.promptForInt("Please choose an option: ");
+        if (action == APPROVED) {
+            BigDecimal balance = moneyTransferService.getBalanceByUserId(currentUser.getUser().getId());
+            BigDecimal amount = transfer.getAmount();
+
+            if (amount.compareTo(balance) > 0) {
+                System.out.println("You do not have enough balance to approve transfer.");
+                return;
+            }
+
+            boolean success = moneyTransferService.approveTransfer(transfer);
+            if (success) {
+                System.out.println("Transfer approved.");
+            }
+            else {
+                System.out.println("Failed to approve transfer");
+            }
+        }
+        else if (action == REJECTED)  {
+            boolean success = moneyTransferService.rejectTransfer(transfer);
+            if (success) {
+                System.out.println("Transfer rejected.");
+            }
+            else {
+                System.out.println("Failed to reject transfer");
+            }
+        }
+        else {
+            System.out.println("Action Canceled.");
+        }
 	}
 
 	private void sendBucks() {

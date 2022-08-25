@@ -6,7 +6,6 @@ import com.techelevator.tenmo.model.User;
 import com.techelevator.tenmo.model.UserCredentials;
 
 import java.math.BigDecimal;
-import java.sql.SQLOutput;
 import java.util.Scanner;
 
 public class ConsoleService {
@@ -118,16 +117,23 @@ public class ConsoleService {
         System.out.println(errMessage);
     }
 
-    public void printTransferBasic(TransferDetail[] transferDetails) {
-        System.out.println("----------------------------------------");
+    public void printPendingTransfers(TransferDetail[] transferDetails) {
+        System.out.println("-----------------------------------------");
         System.out.println("Pending Tranfers");
-        System.out.println("ID             To              Amount");
+        System.out.printf("%-10s %-20s %-15s %n", "ID", "To", "Amount");
         System.out.println("-----------------------------------------");
         for(TransferDetail t : transferDetails) {
-            System.out.println(t.getId() + "         " + t.getToUser().getUsername() + "         " + t.getAmount());
+            System.out.printf("%-10d %-20s %-13.2f%n", t.getId(), t.getToUser().getUsername(), t.getAmount());
         }
-        System.out.println("---------------------------------");
+        System.out.println("-----------------------------------------");
         System.out.println();
+    }
+
+    public void printApproveRejectMenu() {
+        System.out.println("1. Approve");
+        System.out.println("2. Reject");
+        System.out.println("0. Don't approve or reject");
+        System.out.println("--------------------------");
     }
 
     public void printTransfers(TransferDetail[] transferDetails){

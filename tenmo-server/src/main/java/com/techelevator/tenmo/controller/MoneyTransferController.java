@@ -2,6 +2,7 @@ package com.techelevator.tenmo.controller;
 
 import com.techelevator.tenmo.dao.AccountDao;
 import com.techelevator.tenmo.dao.UserDao;
+import com.techelevator.tenmo.exceptions.TenmoException;
 import com.techelevator.tenmo.model.MoneyTransfer;
 import com.techelevator.tenmo.model.TEUser;
 import com.techelevator.tenmo.model.TransferDetail;
@@ -48,6 +49,16 @@ public class MoneyTransferController {
     @GetMapping("/pendings/{userId}")
     public TransferDetail[] getPendingTransfers(@PathVariable Long userId) {
         return accountDao.getPendingTransfers(userId);
+    }
+
+    @PutMapping("/approve")
+    public boolean approveTransfer(@RequestBody TransferDetail transferDetail) throws TenmoException {
+        return accountDao.approveTransfer(transferDetail);
+    }
+
+    @PutMapping("/reject")
+    public boolean rejectTransfer(@RequestBody TransferDetail transferDetail) throws TenmoException {
+        return accountDao.rejectTransfer(transferDetail);
     }
 
     @GetMapping("/transfers/{userId}")
