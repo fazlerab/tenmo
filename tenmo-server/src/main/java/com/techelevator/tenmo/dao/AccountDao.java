@@ -1,5 +1,6 @@
 package com.techelevator.tenmo.dao;
 
+import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.MoneyTransfer;
 import com.techelevator.tenmo.model.TransferDetail;
 
@@ -14,4 +15,7 @@ public interface AccountDao {
 
     TransferDetail[] getPendingTransfers(Long userId);
 
+    Account getAccountByUserId(Long userId);
+
+    boolean requestMoney(MoneyTransfer moneyTransfer);
 }

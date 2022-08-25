@@ -2,10 +2,7 @@ package com.techelevator.tenmo.controller;
 
 import com.techelevator.tenmo.dao.AccountDao;
 import com.techelevator.tenmo.dao.UserDao;
-import com.techelevator.tenmo.model.MoneyTransfer;
-import com.techelevator.tenmo.model.TEUser;
-import com.techelevator.tenmo.model.TransferDetail;
-import com.techelevator.tenmo.model.User;
+import com.techelevator.tenmo.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -45,6 +42,13 @@ public class MoneyTransferController {
         return success;
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("/request")
+    public boolean requestMoney(@RequestBody MoneyTransfer moneyTransfer) {
+        boolean success = accountDao.requestMoney(moneyTransfer);
+        return success;
+    }
+
     @GetMapping("/pendings/{userId}")
     public TransferDetail[] getPendingTransfers(@PathVariable Long userId) {
         return accountDao.getPendingTransfers(userId);
@@ -53,5 +57,10 @@ public class MoneyTransferController {
     @GetMapping("/transfers/{userId}")
     public TransferDetail[] getTransfers(@PathVariable Long userId) {
         return accountDao.getTransfers(userId);
+    }
+
+    @GetMapping("/users/{userId}/account")
+    public Account list(@PathVariable long userId){
+        return accountDao.getAccountByUserId(userId);
     }
 }

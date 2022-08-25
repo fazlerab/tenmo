@@ -1,5 +1,6 @@
 package com.techelevator.tenmo.dao;
 
+import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.MoneyTransfer;
 import com.techelevator.tenmo.model.TEUser;
 import com.techelevator.tenmo.model.TransferDetail;
@@ -59,6 +60,20 @@ public class JdbcAccountDao implements AccountDao {
         return true;
     }
 
+    public boolean requestMoney(MoneyTransfer moneyTransfer) {
+        Long transferTypeId = getTransferTypeId("Request");
+        Long transferStatusId = getTransferStatusId("Pending");
+
+        Long fromAccountId = getAccountId(moneyTransfer.getFromUserId());
+        Long toAccountId = getAccountId(moneyTransfer.getToUserId());
+
+        BigDecimal amount = moneyTransfer.getAmount();
+
+        insertIntoTransfer(transferTypeId, transferStatusId, fromAccountId, toAccountId, amount);
+        return true;
+    }
+
+
     @Override
     public TransferDetail[] getPendingTransfers(Long userId) {
         Long accountId = getAccountId(userId);
@@ -78,6 +93,17 @@ public class JdbcAccountDao implements AccountDao {
         }
 
         return transfers.toArray(new TransferDetail[transfers.size()]);
+    }
+
+    @Override
+    public Account getAccountByUserId(Long userId) {
+        String sql = "SELECT * FROM account WHERE user_id = ?";
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId);
+
+        if(results.next()){
+            return mapRowToAccount(results);
+        }
+        return null;
     }
 
     private TransferDetail mapToTransferDetail(SqlRowSet rs) {
@@ -161,5 +187,13 @@ public class JdbcAccountDao implements AccountDao {
         }
         System.out.println("user: " + user);
         return user;
+    }
+
+    private Account mapRowToAccount(SqlRowSet results){
+        Account account = new Account();
+        account.setAccount_id(results.getLong("account_id"));
+        account.setBalance(results.getBigDecimal("balance"));
+        account.setUser_id(results.getLong("user_id"));
+        return account;
     }
 }
