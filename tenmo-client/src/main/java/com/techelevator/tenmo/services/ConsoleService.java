@@ -142,10 +142,10 @@ public class ConsoleService {
         System.out.printf("%-14s %-23s %s \n", "ID", "From/To", "Amount");
         System.out.println("---------------------------------------------");
         for(TransferDetail t: transferDetails) {
-            if (t.getType().equals("Send") || ) {
-                System.out.printf("%-14s To:%-18s $%s \n", t.getId().toString() ,t.getFromUser().getUsername() , t.getAmount().toString());
+            if (t.getType().equals("Send") || t.getToUser().getId().equals(user.getId())) {
+                System.out.printf("%-14s To:%-18s $%s \n", t.getId().toString() ,t.getToUser().getUsername() , t.getAmount().toString());
             } else if(t.getType().equals("Request")){
-                System.out.printf("%-14s From:%-18s $%s \n", t.getId().toString() ,t.getToUser().getUsername() , t.getAmount().toString());
+                System.out.printf("%-14s From:%-18s $%s \n", t.getId().toString() ,t.getFromUser().getUsername() , t.getAmount().toString());
             }
         }
         System.out.println("---------");
