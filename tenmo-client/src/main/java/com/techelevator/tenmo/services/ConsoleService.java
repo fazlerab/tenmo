@@ -1,7 +1,7 @@
 package com.techelevator.tenmo.services;
 
 
-import com.techelevator.tenmo.model.TransferDetail;
+import com.techelevator.tenmo.model.Transfer;
 import com.techelevator.tenmo.model.User;
 import com.techelevator.tenmo.model.UserCredentials;
 
@@ -118,12 +118,12 @@ public class ConsoleService {
         System.out.println(errMessage);
     }
 
-    public void printPendingTransfers(TransferDetail[] transferDetails) {
+    public void printPendingTransfers(Transfer[] transfers) {
         System.out.println("-----------------------------------------");
         System.out.println("Pending Transfers");
         System.out.printf("%-10s %-20s %-15s %n", "ID", "To", "Amount");
         System.out.println("-----------------------------------------");
-        for(TransferDetail t : transferDetails) {
+        for(Transfer t : transfers) {
             System.out.printf("%-10d %-20s $%-13.2f%n", t.getId(), t.getToUser().getUsername(), t.getAmount());
         }
         System.out.println("---------");
@@ -136,12 +136,12 @@ public class ConsoleService {
         System.out.println("---------");
     }
 
-    public void printTransfers(TransferDetail[] transferDetails, User user){
+    public void printTransfers(Transfer[] transfers, User user){
         System.out.println("---------------------------------------------");
         System.out.println("Transfers");
         System.out.printf("%-14s %-23s %s \n", "ID", "From/To", "Amount");
         System.out.println("---------------------------------------------");
-        for(TransferDetail t: transferDetails) {
+        for(Transfer t: transfers) {
             if ((t.getType().equals("Send") && t.getFromUser().getId().equals(user.getId())
                     || (t.getType().equals("Request") && t.getFromUser().getId().equals(user.getId())))) {
                 System.out.printf("%-14s To: %-19s $%s \n", t.getId().toString() ,t.getToUser().getUsername() , t.getAmount().toString());
@@ -153,7 +153,7 @@ public class ConsoleService {
         System.out.println("---------");
     }
 
-    public void printTransferDetail(TransferDetail transferDetails){
+    public void printTransferDetail(Transfer transferDetails){
         System.out.println("---------------------------------------------");
         System.out.println("Transfer Details");
         System.out.println("---------------------------------------------");

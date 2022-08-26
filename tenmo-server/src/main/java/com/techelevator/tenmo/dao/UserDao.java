@@ -1,6 +1,5 @@
 package com.techelevator.tenmo.dao;
 
-import com.techelevator.tenmo.model.MoneyTransfer;
 import com.techelevator.tenmo.model.TEUser;
 import com.techelevator.tenmo.model.User;
 

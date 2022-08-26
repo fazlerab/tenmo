@@ -1,9 +1,12 @@
 package com.techelevator.tenmo;
 
-import com.techelevator.tenmo.model.*;
+import com.techelevator.tenmo.model.AuthenticatedUser;
+import com.techelevator.tenmo.model.Transfer;
+import com.techelevator.tenmo.model.User;
+import com.techelevator.tenmo.model.UserCredentials;
 import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.ConsoleService;
-import com.techelevator.tenmo.services.MoneyTransferService;
+import com.techelevator.tenmo.services.TransferService;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -17,7 +20,7 @@ public class App {
 
     private final ConsoleService consoleService = new ConsoleService();
     private final AuthenticationService authenticationService = new AuthenticationService(API_BASE_URL);
-    private final MoneyTransferService moneyTransferService = new MoneyTransferService(API_BASE_URL);
+    private final TransferService transferService = new TransferService(API_BASE_URL);
 
     private AuthenticatedUser currentUser;
 
@@ -65,7 +68,7 @@ public class App {
         if (currentUser == null) {
             consoleService.printErrorMessage();
         } else {
-            moneyTransferService.setAuthToken(currentUser.getToken());
+            transferService.setAuthToken(currentUser.getToken());
         }
     }
 
@@ -94,14 +97,13 @@ public class App {
     }
 
 	private void viewCurrentBalance() {
-        BigDecimal balance = moneyTransferService.getBalanceByUserId(currentUser.getUser().getId());
+        BigDecimal balance = transferService.getBalanceByUserId(currentUser.getUser().getId());
 		System.out.println("Your current balance is: $" + balance.toString());
 	}
 
 	private void viewTransferHistory() {
-		// TODO Auto-generated method stub
-        TransferDetail[] transferDetails = moneyTransferService.getTransferDetails(currentUser.getUser().getId());
-        consoleService.printTransfers(transferDetails, currentUser.getUser());
+        Transfer[] transfers = transferService.getTransfer(currentUser.getUser().getId());
+        consoleService.printTransfers(transfers, currentUser.getUser());
         Long transferId = consoleService.promptForLong("Please enter transfer ID to view details (0 to cancel): ");
 
         if (transferId == 0) {
@@ -109,11 +111,11 @@ public class App {
             return;
         }
 
-        if (!isTransferIdValid(transferDetails, transferId)){
+        if (!isTransferIdValid(transfers, transferId)){
             return;
         }
 
-        for(TransferDetail t : transferDetails){
+        for(Transfer t : transfers){
             if (t.getId().equals(transferId)){
                 consoleService.printTransferDetail(t);
             }
@@ -122,8 +124,8 @@ public class App {
 	}
 
 	private void viewPendingRequests() {
-        TransferDetail[] transferDetails = moneyTransferService.getPendingTransferDetails(currentUser.getUser().getId());
-        consoleService.printPendingTransfers(transferDetails);
+        Transfer[] transfers = transferService.getPendingTransferDetails(currentUser.getUser().getId());
+        consoleService.printPendingTransfers(transfers);
         Long transferId = consoleService.promptForLong("Please enter transfer ID to approve/reject (0 to cancel): ");
 
         if (transferId == 0L) {
@@ -131,12 +133,12 @@ public class App {
             return;
         }
 
-        if (!isTransferIdValid(transferDetails, transferId)) {
+        if (!isTransferIdValid(transfers, transferId)) {
             return;
         }
 
-        TransferDetail transfer = null;
-        for(TransferDetail t : transferDetails) {
+        Transfer transfer = null;
+        for(Transfer t : transfers) {
             if (t.getId().equals(transferId)) {
                 transfer = t;
                 break;
@@ -146,7 +148,7 @@ public class App {
         consoleService.printApproveRejectMenu();
         int action = consoleService.promptForInt("Please choose an option: ");
         if (action == APPROVED) {
-            BigDecimal balance = moneyTransferService.getBalanceByUserId(currentUser.getUser().getId());
+            BigDecimal balance = transferService.getBalanceByUserId(currentUser.getUser().getId());
             BigDecimal amount = transfer.getAmount();
 
             if (amount.compareTo(balance) > 0) {
@@ -154,7 +156,7 @@ public class App {
                 return;
             }
 
-            boolean success = moneyTransferService.approveTransfer(transfer);
+            boolean success = transferService.approveTransfer(transfer);
             if (success) {
                 System.out.println("Transfer approved.");
             }
@@ -163,7 +165,7 @@ public class App {
             }
         }
         else if (action == REJECTED)  {
-            boolean success = moneyTransferService.rejectTransfer(transfer);
+            boolean success = transferService.rejectTransfer(transfer);
             if (success) {
                 System.out.println("Transfer rejected.");
             }
@@ -177,7 +179,7 @@ public class App {
 	}
 
 	private void sendBucks() {
-        User[] users = moneyTransferService.getOtherUsers(currentUser.getUser().getId());
+        User[] users = transferService.getOtherUsers(currentUser.getUser().getId());
         consoleService.printUsers(users);
 
         Long userId = consoleService.promptForLong("Enter ID of user you are sending to (0 to cancel):");
@@ -191,13 +193,14 @@ public class App {
         }
 
         BigDecimal amount =  consoleService.promptForBigDecimal("Enter Amount: ");
-        BigDecimal balance = moneyTransferService.getBalanceByUserId(currentUser.getUser().getId());
+        BigDecimal balance = transferService.getBalanceByUserId(currentUser.getUser().getId());
         if (!isAmountValid(amount, balance)) {
             return;
         }
 
-        MoneyTransfer sendMoney = new MoneyTransfer(currentUser.getUser().getId(), userId, amount);
-        boolean success = moneyTransferService.send(sendMoney);
+        Transfer sendMoney = new Transfer(currentUser.getUser(), getUser(users, userId),
+                "Send", "Approved", amount);
+        boolean success = transferService.send(sendMoney);
         if (success) {
             System.out.println("Money transferred successfully.");
         }
@@ -207,23 +210,20 @@ public class App {
 	}
 
 	private void requestBucks() {
-        User[] users = moneyTransferService.getOtherUsers(currentUser.getUser().getId());
+        User[] users = transferService.getOtherUsers(currentUser.getUser().getId());
         consoleService.printUsers(users);
 
-        Long currentUserId = currentUser.getUser().getId();
+		Long fromUserId = consoleService.promptForLong("Enter Id of user you are requesting from (0 to cancel): ");
 
-		Long transferUserId = consoleService.promptForLong("Enter Id of user you are requesting from (0 to cancel): ");
-        if (transferUserId.equals(currentUser.getUser().getId())){
+        if (fromUserId.equals(currentUser.getUser().getId())){
             System.out.println("You cannot select to transfer money from yourself.");
         }
-        if (transferUserId != 0){
+        if (fromUserId != 0){
             BigDecimal amount = consoleService.promptForBigDecimal("Enter amount: ");
 
-//            Long accountFrom = moneyTransferService.getAccountByUserId(transferUserId).getAccount_id();
-//            Long accountTo = moneyTransferService.getAccountByUserId(currentUserId).getAccount_id();
-
-            MoneyTransfer requestMoney = new MoneyTransfer(transferUserId, currentUserId, amount);
-            boolean success = moneyTransferService.request(requestMoney);
+            Transfer requestMoney = new Transfer(getUser(users, fromUserId), currentUser.getUser(), "Request",
+                    "Pending", amount);
+            boolean success = transferService.request(requestMoney);
             if (success) {
                 System.out.println("Request made successfully.");
             }
@@ -232,6 +232,15 @@ public class App {
             }
         }
 	}
+
+    private User getUser(User[] users, Long userId) {
+        for(User u : users) {
+            if (u.getId().equals(userId)) {
+                return u;
+            }
+        }
+        return null;
+    }
 
     private boolean isUserIdValid(User[] users, Long sendUserId) {
         Set<Long> userIdSet = new HashSet<>();
@@ -246,9 +255,9 @@ public class App {
         return true;
     }
 
-    private boolean isTransferIdValid(TransferDetail[] transfers, Long transferId) {
+    private boolean isTransferIdValid(Transfer[] transfers, Long transferId) {
         Set<Long> transferIdSet = new HashSet<>();
-        for (TransferDetail t: transfers) {
+        for (Transfer t: transfers) {
             transferIdSet.add(t.getId());
         }
 

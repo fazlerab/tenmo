@@ -2,19 +2,28 @@ package com.techelevator.tenmo.model;
 
 import java.math.BigDecimal;
 
-public class TransferDetail {
+public class Transfer {
     private Long id;
-    private TEUser fromUser;
-    private TEUser toUser;
+    private User fromUser;
+    private User toUser;
     private String type;
     private String status;
     BigDecimal amount;
 
-    public TransferDetail() {
+    public Transfer() {
     }
 
-    public TransferDetail(Long id, TEUser fromUser, TEUser toUser, String type, String status, BigDecimal amount) {
+    public Transfer(Long id, User fromUser, User toUser, String type, String status, BigDecimal amount) {
         this.id = id;
+        this.fromUser = fromUser;
+        this.toUser = toUser;
+        this.type = type;
+        this.status = status;
+        this.amount = amount;
+    }
+
+    public Transfer(User fromUser, User toUser, String type, String status, BigDecimal amount) {
+        this.id = 0L;
         this.fromUser = fromUser;
         this.toUser = toUser;
         this.type = type;
@@ -30,19 +39,19 @@ public class TransferDetail {
         this.id = id;
     }
 
-    public TEUser getFromUser() {
+    public User getFromUser() {
         return fromUser;
     }
 
-    public void setFromUser(TEUser fromUser) {
+    public void setFromUser(User fromUser) {
         this.fromUser = fromUser;
     }
 
-    public TEUser getToUser() {
+    public User getToUser() {
         return toUser;
     }
 
-    public void setToUser(TEUser toUser) {
+    public void setToUser(User toUser) {
         this.toUser = toUser;
     }
 

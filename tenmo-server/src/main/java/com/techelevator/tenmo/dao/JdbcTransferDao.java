@@ -3,10 +3,8 @@ package com.techelevator.tenmo.dao;
 import com.techelevator.tenmo.exceptions.InvalidTransferAmountException;
 import com.techelevator.tenmo.exceptions.TenmoException;
 import com.techelevator.tenmo.exceptions.TransferFailedException;
-import com.techelevator.tenmo.model.Account;
-import com.techelevator.tenmo.model.MoneyTransfer;
 import com.techelevator.tenmo.model.TEUser;
-import com.techelevator.tenmo.model.TransferDetail;
+import com.techelevator.tenmo.model.Transfer;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
@@ -17,11 +15,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class JdbcAccountDao implements AccountDao {
+public class JdbcTransferDao implements TransferDao {
 
     private JdbcTemplate jdbcTemplate;
 
-    public JdbcAccountDao(JdbcTemplate jdbcTemplate) {
+    public JdbcTransferDao(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -32,29 +30,29 @@ public class JdbcAccountDao implements AccountDao {
     }
 
     @Override
-    public TransferDetail[] getTransfers(Long myUserId) {
+    public Transfer[] getTransfers(Long myUserId) {
         String sql = "Select transfer_id, transfer_type_id, transfer_status_id, account_from, account_to,"
                 + " amount From transfer t Join account a On a.account_id = t.account_from Or a.account_id = t.account_to " +
                 " Where a.user_id = ?;";
 
         SqlRowSet result = jdbcTemplate.queryForRowSet(sql, myUserId);
-        List<TransferDetail> transfers = new ArrayList<>();
+        List<Transfer> transfers = new ArrayList<>();
         while(result.next()){
-            transfers.add(mapToTransferDetail(result));
+            transfers.add(mapToTransfer(result));
         }
-        return transfers.toArray(new TransferDetail[transfers.size()]);
+        return transfers.toArray(new Transfer[transfers.size()]);
     }
 
     @Transactional
     @Override
-    public boolean sendMoney(MoneyTransfer moneyTransfer) {
+    public boolean sendMoney(Transfer transfer) {
         Long transferTypeId = getTransferTypeId("Send");
         Long tranferStatusId = getTransferStatusId("Approved");
 
-        Long fromAccountId = getAccountId(moneyTransfer.getFromUserId());
-        Long toAccountId = getAccountId(moneyTransfer.getToUserId());
+        Long fromAccountId = getAccountId(transfer.getFromUser().getId());
+        Long toAccountId = getAccountId(transfer.getToUser().getId());
 
-        BigDecimal amount = moneyTransfer.getAmount();
+        BigDecimal amount = transfer.getAmount();
 
         insertIntoTransfer(transferTypeId, tranferStatusId, fromAccountId, toAccountId, amount);
         deductFromAccount(fromAccountId, amount);
@@ -63,35 +61,24 @@ public class JdbcAccountDao implements AccountDao {
         return true;
     }
 
-    public boolean requestMoney(MoneyTransfer moneyTransfer) {
+    @Override
+    public boolean requestMoney(Transfer transfer) {
         Long transferTypeId = getTransferTypeId("Request");
         Long transferStatusId = getTransferStatusId("Pending");
 
-        Long fromAccountId = getAccountId(moneyTransfer.getFromUserId());
-        Long toAccountId = getAccountId(moneyTransfer.getToUserId());
+        Long fromAccountId = getAccountId(transfer.getFromUser().getId());
+        Long toAccountId = getAccountId(transfer.getToUser().getId());
 
-        BigDecimal amount = moneyTransfer.getAmount();
+        BigDecimal amount = transfer.getAmount();
 
         insertIntoTransfer(transferTypeId, transferStatusId, fromAccountId, toAccountId, amount);
         return true;
     }
 
     @Override
-    public Account getAccountByUserId(Long userId) {
-        String sql = "SELECT * FROM account WHERE user_id = ?";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId);
-
-        if(results.next()){
-            return mapRowToAccount(results);
-        }
-        return null;
-    }
-
-    @Override
-    public TransferDetail[] getPendingTransfers(Long userId) {
+    public Transfer[] getPendingTransfers(Long userId) {
         Long accountId = getAccountId(userId);
         Long transferStatusId = getTransferStatusId("Pending");
-        //System.out.println("accountId = " + accountId + "   statusId = " + transferStatusId);
 
         String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount " +
                 "FROM transfer " +
@@ -99,20 +86,18 @@ public class JdbcAccountDao implements AccountDao {
                 "AND account_from = ?;";
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, transferStatusId, accountId);
 
-        List<TransferDetail> transfers = new ArrayList<>();
+        List<Transfer> transfers = new ArrayList<>();
         while(rowSet.next()) {
-            System.out.println("in while");
-            transfers.add(mapToTransferDetail(rowSet));
+            transfers.add(mapToTransfer(rowSet));
         }
 
-        return transfers.toArray(new TransferDetail[transfers.size()]);
+        return transfers.toArray(new Transfer[transfers.size()]);
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public boolean approveTransfer(TransferDetail transfer) throws TenmoException {
+    public boolean approveTransfer(Transfer transfer) throws TenmoException {
         BigDecimal fromUserBalance = getBalanceByUserId(transfer.getFromUser().getId());
-        BigDecimal toUserBalance = getBalanceByUserId(transfer.getToUser().getId());
 
         if (transfer.getAmount().compareTo(fromUserBalance) > 0) {
             throw new InvalidTransferAmountException("Not enough balance to approve transfer.");
@@ -137,8 +122,9 @@ public class JdbcAccountDao implements AccountDao {
     }
 
     @Override
-    public boolean rejectTransfer(TransferDetail transfer) throws TenmoException {
+    public boolean rejectTransfer(Transfer transfer) throws TenmoException {
         Long rejectedStatusId = getTransferStatusId("Rejected");
+
         String sql = "UPDATE transfer " +
                 "SET transfer_status_id = ? " +
                 "WHERE transfer_id = ?;";
@@ -146,11 +132,11 @@ public class JdbcAccountDao implements AccountDao {
         if (rows == 0) {
             throw new TransferFailedException("Transfer rejection failed.");
         }
-        return false;
+        return true;
     }
 
-    private TransferDetail mapToTransferDetail(SqlRowSet rs) {
-        TransferDetail transfer = new TransferDetail();
+    private Transfer mapToTransfer(SqlRowSet rs) {
+        Transfer transfer = new Transfer();
         transfer.setId(rs.getLong("transfer_id"));
         transfer.setType(getTransferType(rs.getLong("transfer_type_id")));
         transfer.setStatus(getTransferStatus(rs.getLong("transfer_status_id")));
@@ -212,13 +198,13 @@ public class JdbcAccountDao implements AccountDao {
                 String.class, id);
     }
 
-    public Long getAccountId(Long userId) {
+    private Long getAccountId(Long userId) {
         return jdbcTemplate.queryForObject(
                 "SELECT account_id FROM account WHERE user_id = ?;",
                 Long.class, userId);
     }
 
-    public TEUser getUserByAccountId(Long accountId) {
+    private TEUser getUserByAccountId(Long accountId) {
         String sql = "SELECT tenmo_user.user_id, tenmo_user.username " +
                 "FROM tenmo_user " +
                 "JOIN account ON account.user_id = tenmo_user.user_id " +
@@ -228,15 +214,6 @@ public class JdbcAccountDao implements AccountDao {
         if (rowSet.next()) {
             user  = new TEUser(rowSet.getLong("user_id"), rowSet.getString("username"));
         }
-        System.out.println("user: " + user);
         return user;
-    }
-
-    private Account mapRowToAccount(SqlRowSet results){
-        Account account = new Account();
-        account.setAccount_id(results.getLong("account_id"));
-        account.setBalance(results.getBigDecimal("balance"));
-        account.setUser_id(results.getLong("user_id"));
-        return account;
     }
 }
