@@ -101,11 +101,12 @@ public class ConsoleService {
         System.out.println();
         System.out.println("----------------------------");
         System.out.println("User");
-        System.out.println("Id          Name");
+        System.out.println("ID          Name");
         System.out.println("----------------------------");
         for (User u: users) {
-            System.out.println(u.getId() + "       " + u.getUsername());
+            System.out.println(u.getId() + "        " + u.getUsername());
         }
+        System.out.println("---------");
         System.out.println();
     }
 
@@ -119,21 +120,20 @@ public class ConsoleService {
 
     public void printPendingTransfers(TransferDetail[] transferDetails) {
         System.out.println("-----------------------------------------");
-        System.out.println("Pending Tranfers");
+        System.out.println("Pending Transfers");
         System.out.printf("%-10s %-20s %-15s %n", "ID", "To", "Amount");
         System.out.println("-----------------------------------------");
         for(TransferDetail t : transferDetails) {
-            System.out.printf("%-10d %-20s %-13.2f%n", t.getId(), t.getToUser().getUsername(), t.getAmount());
+            System.out.printf("%-10d %-20s $%-13.2f%n", t.getId(), t.getToUser().getUsername(), t.getAmount());
         }
-        System.out.println("-----------------------------------------");
-        System.out.println();
+        System.out.println("---------");
     }
 
     public void printApproveRejectMenu() {
         System.out.println("1. Approve");
         System.out.println("2. Reject");
         System.out.println("0. Don't approve or reject");
-        System.out.println("--------------------------");
+        System.out.println("---------");
     }
 
     public void printTransfers(TransferDetail[] transferDetails, User user){
@@ -142,10 +142,12 @@ public class ConsoleService {
         System.out.printf("%-14s %-23s %s \n", "ID", "From/To", "Amount");
         System.out.println("---------------------------------------------");
         for(TransferDetail t: transferDetails) {
-            if (t.getType().equals("Send") || t.getToUser().getId().equals(user.getId())) {
-                System.out.printf("%-14s To:%-18s $%s \n", t.getId().toString() ,t.getToUser().getUsername() , t.getAmount().toString());
-            } else if(t.getType().equals("Request")){
-                System.out.printf("%-14s From:%-18s $%s \n", t.getId().toString() ,t.getFromUser().getUsername() , t.getAmount().toString());
+            if ((t.getType().equals("Send") && t.getFromUser().getId().equals(user.getId())
+                    || (t.getType().equals("Request") && t.getFromUser().getId().equals(user.getId())))) {
+                System.out.printf("%-14s To: %-19s $%s \n", t.getId().toString() ,t.getToUser().getUsername() , t.getAmount().toString());
+            }
+            else if((t.getType().equals("Request") && t.getToUser().getId().equals(user.getId())) || (t.getType().equals("Send") && t.getToUser().getId().equals(user.getId()))){
+                System.out.printf("%-14s From: %-17s $%s \n", t.getId().toString() ,t.getFromUser().getUsername() , t.getAmount().toString());
             }
         }
         System.out.println("---------");
