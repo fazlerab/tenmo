@@ -91,7 +91,7 @@ public class JdbcAccountDao implements AccountDao {
     public TransferDetail[] getPendingTransfers(Long userId) {
         Long accountId = getAccountId(userId);
         Long transferStatusId = getTransferStatusId("Pending");
-        System.out.println("accountId = " + accountId + "   statusId = " + transferStatusId);
+        //System.out.println("accountId = " + accountId + "   statusId = " + transferStatusId);
 
         String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount " +
                 "FROM transfer " +
@@ -118,8 +118,11 @@ public class JdbcAccountDao implements AccountDao {
             throw new InvalidTransferAmountException("Not enough balance to approve transfer.");
         }
 
-        deductFromAccount(transfer.getFromUser().getId(), transfer.getAmount());
-        addToAccount(transfer.getToUser().getId(), transfer.getAmount());
+        Long fromAccountId = getAccountId(transfer.getFromUser().getId());
+        Long toAccountId = getAccountId(transfer.getToUser().getId());
+
+        deductFromAccount(fromAccountId, transfer.getAmount());
+        addToAccount(toAccountId, transfer.getAmount());
 
         Long approvedStatusId = getTransferStatusId("Approved");
         String sql = "UPDATE transfer " +

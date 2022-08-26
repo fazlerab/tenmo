@@ -125,6 +125,10 @@ public class App {
         TransferDetail[] transferDetails = moneyTransferService.getPendingTransferDetails(currentUser.getUser().getId());
         consoleService.printPendingTransfers(transferDetails);
         Long transferId = consoleService.promptForLong("Please enter transfer ID to approve/reject (0 to cancel): ");
+        if (transferId == 0) {
+            System.out.println("Action canceled.");
+            return;
+        }
 
         TransferDetail transfer = null;
         for(TransferDetail t : transferDetails) {
@@ -210,10 +214,10 @@ public class App {
         if (transferUserId != 0){
             BigDecimal amount = consoleService.promptForBigDecimal("Enter amount: ");
 
-            Long accountFrom = moneyTransferService.getAccountByUserId(currentUserId).getAccount_id();
-            Long accountTo = moneyTransferService.getAccountByUserId(transferUserId).getAccount_id();
+//            Long accountFrom = moneyTransferService.getAccountByUserId(transferUserId).getAccount_id();
+//            Long accountTo = moneyTransferService.getAccountByUserId(currentUserId).getAccount_id();
 
-            MoneyTransfer requestMoney = new MoneyTransfer(currentUserId, transferUserId, amount);
+            MoneyTransfer requestMoney = new MoneyTransfer(transferUserId, currentUserId, amount);
             boolean success = moneyTransferService.request(requestMoney);
             if (success) {
                 System.out.println("Request made successfully.");
