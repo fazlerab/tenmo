@@ -3,6 +3,7 @@ package com.techelevator.tenmo.dao;
 import com.techelevator.tenmo.exceptions.InvalidTransferAmountException;
 import com.techelevator.tenmo.exceptions.TenmoException;
 import com.techelevator.tenmo.exceptions.TransferFailedException;
+import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.MoneyTransfer;
 import com.techelevator.tenmo.model.TEUser;
 import com.techelevator.tenmo.model.TransferDetail;
@@ -33,8 +34,10 @@ public class JdbcAccountDao implements AccountDao {
     @Override
     public TransferDetail[] getTransfers(Long myUserId) {
         String sql = "Select transfer_id, transfer_type_id, transfer_status_id, account_from, account_to,"
-                + " amount From transfer Where account_to = ? Or account_from = ?;";
-        SqlRowSet result = jdbcTemplate.queryForRowSet(sql, myUserId, myUserId);
+                + " amount From transfer t Join account a On a.account_id = t.account_from Or a.account_id = t.account_to " +
+                " Where a.user_id = ?;";
+
+        SqlRowSet result = jdbcTemplate.queryForRowSet(sql, myUserId);
         List<TransferDetail> transfers = new ArrayList<>();
         while(result.next()){
             transfers.add(mapToTransferDetail(result));
@@ -60,10 +63,35 @@ public class JdbcAccountDao implements AccountDao {
         return true;
     }
 
+    public boolean requestMoney(MoneyTransfer moneyTransfer) {
+        Long transferTypeId = getTransferTypeId("Request");
+        Long transferStatusId = getTransferStatusId("Pending");
+
+        Long fromAccountId = getAccountId(moneyTransfer.getFromUserId());
+        Long toAccountId = getAccountId(moneyTransfer.getToUserId());
+
+        BigDecimal amount = moneyTransfer.getAmount();
+
+        insertIntoTransfer(transferTypeId, transferStatusId, fromAccountId, toAccountId, amount);
+        return true;
+    }
+
+    @Override
+    public Account getAccountByUserId(Long userId) {
+        String sql = "SELECT * FROM account WHERE user_id = ?";
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId);
+
+        if(results.next()){
+            return mapRowToAccount(results);
+        }
+        return null;
+    }
+
     @Override
     public TransferDetail[] getPendingTransfers(Long userId) {
         Long accountId = getAccountId(userId);
         Long transferStatusId = getTransferStatusId("Pending");
+        System.out.println("accountId = " + accountId + "   statusId = " + transferStatusId);
 
         String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount " +
                 "FROM transfer " +
@@ -73,6 +101,7 @@ public class JdbcAccountDao implements AccountDao {
 
         List<TransferDetail> transfers = new ArrayList<>();
         while(rowSet.next()) {
+            System.out.println("in while");
             transfers.add(mapToTransferDetail(rowSet));
         }
 
@@ -142,24 +171,18 @@ public class JdbcAccountDao implements AccountDao {
                 toAccountId, amount);
     }
 
-    private void addToAccount(Long toAccountId, BigDecimal amount) /*throws TenmoException*/ {
+    private void addToAccount(Long toAccountId, BigDecimal amount) {
         String addToUserAccountSql = "UPDATE account " +
                 "SET balance = balance + ? " +
                 "WHERE account_id = ?;";
         int rows = jdbcTemplate.update(addToUserAccountSql, amount, toAccountId);
-//        if (rows == 0) {
-//            throw new TransferFailedException("Failed to transfer to an account.");
-//        }
     }
 
-    private void deductFromAccount(Long accountId, BigDecimal amount) /*throws TenmoException*/ {
+    private void deductFromAccount(Long accountId, BigDecimal amount) {
         String sql = "UPDATE account " +
                 "SET balance = balance - ? " +
                 "WHERE account_id = ?;";
         int rows = jdbcTemplate.update(sql, amount, accountId);
-//        if (rows == 0) {
-//            throw new TransferFailedException("Failed to transfer from an account.");
-//        }
     }
 
     private Long getTransferStatusId(String status) {
@@ -202,6 +225,15 @@ public class JdbcAccountDao implements AccountDao {
         if (rowSet.next()) {
             user  = new TEUser(rowSet.getLong("user_id"), rowSet.getString("username"));
         }
+        System.out.println("user: " + user);
         return user;
+    }
+
+    private Account mapRowToAccount(SqlRowSet results){
+        Account account = new Account();
+        account.setAccount_id(results.getLong("account_id"));
+        account.setBalance(results.getBigDecimal("balance"));
+        account.setUser_id(results.getLong("user_id"));
+        return account;
     }
 }

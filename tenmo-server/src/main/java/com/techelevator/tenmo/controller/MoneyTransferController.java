@@ -3,10 +3,10 @@ package com.techelevator.tenmo.controller;
 import com.techelevator.tenmo.dao.AccountDao;
 import com.techelevator.tenmo.dao.UserDao;
 import com.techelevator.tenmo.exceptions.TenmoException;
+import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.MoneyTransfer;
 import com.techelevator.tenmo.model.TEUser;
 import com.techelevator.tenmo.model.TransferDetail;
-import com.techelevator.tenmo.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,8 +42,13 @@ public class MoneyTransferController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/send")
     public boolean sendMoney(@RequestBody MoneyTransfer moneyTransfer) {
-        boolean success = accountDao.sendMoney(moneyTransfer);
-        return success;
+        return accountDao.sendMoney(moneyTransfer);
+    }
+
+    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("/request")
+    public boolean requestMoney(@RequestBody MoneyTransfer moneyTransfer) {
+        return accountDao.requestMoney(moneyTransfer);
     }
 
     @GetMapping("/pendings/{userId}")
@@ -64,5 +69,10 @@ public class MoneyTransferController {
     @GetMapping("/transfers/{userId}")
     public TransferDetail[] getTransfers(@PathVariable Long userId) {
         return accountDao.getTransfers(userId);
+    }
+
+    @GetMapping("/users/{userId}/account")
+    public Account list(@PathVariable long userId){
+        return accountDao.getAccountByUserId(userId);
     }
 }

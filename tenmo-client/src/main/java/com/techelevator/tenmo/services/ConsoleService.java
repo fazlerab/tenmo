@@ -137,29 +137,29 @@ public class ConsoleService {
     }
 
     public void printTransfers(TransferDetail[] transferDetails){
-        System.out.println("----------------------------------------");
+        System.out.println("---------------------------------------------");
         System.out.println("Transfers");
-        System.out.println("ID             From/To          Amount");
-        System.out.println("----------------------------------------");
+        System.out.printf("%-14s %-23s %s \n", "ID", "From/To", "Amount");
+        System.out.println("---------------------------------------------");
         for(TransferDetail t: transferDetails) {
             if (t.getType().equals("Send")) {
-                System.out.println(t.getId() + "          " + "From:" + t.getFromUser() + "         " + "$" + t.getAmount());
+                System.out.printf("%-14s From:%-18s $%s \n", t.getId().toString() ,t.getFromUser().getUsername() , t.getAmount().toString());
             } else if(t.getType().equals("Request")){
-                System.out.println(t.getId() + "          " + "To:" + t.getToUser() + "         " + "$" + t.getAmount());
+                System.out.printf("%-14s From:%-18s $%s \n", t.getId().toString() ,t.getToUser().getUsername() , t.getAmount().toString());
             }
         }
-        System.out.println("-----------------");
+        System.out.println("---------");
     }
 
     public void printTransferDetail(TransferDetail transferDetails){
-        System.out.println("------------------------------------------");
+        System.out.println("---------------------------------------------");
         System.out.println("Transfer Details");
-        System.out.println("------------------------------------------");
-        System.out.println(" Id: " + transferDetails.getId());
-        System.out.println(" From: " + transferDetails.getFromUser());
-        System.out.println(" To: " + transferDetails.getToUser());
-        System.out.println(" Type: " + transferDetails.getType());
-        System.out.println(" Status: " + transferDetails.getStatus());
-        System.out.println(" Amount: $" + transferDetails.getAmount());
+        System.out.println("---------------------------------------------");
+        System.out.printf(" %-2s %s \n" , "Id:", transferDetails.getId());
+        System.out.printf(" %-4s %s \n" ,"From:", transferDetails.getFromUser().getUsername());
+        System.out.printf(" %-2s %s \n" ,"To:", transferDetails.getToUser().getUsername());
+        System.out.printf(" %-4s %s \n" ,"Type:", transferDetails.getType());
+        System.out.printf(" %-6s %s \n" ,"Status:", transferDetails.getStatus());
+        System.out.printf(" %-6s $%s \n" ,"Amount:", transferDetails.getAmount());
     }
 }

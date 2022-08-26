@@ -198,8 +198,30 @@ public class App {
 	}
 
 	private void requestBucks() {
-		// TODO Auto-generated method stub
-		
+        User[] users = moneyTransferService.getOtherUsers(currentUser.getUser().getId());
+        consoleService.printUsers(users);
+
+        Long currentUserId = currentUser.getUser().getId();
+
+		Long transferUserId = consoleService.promptForLong("Enter Id of user you are requesting from (0 to cancel): ");
+        if (transferUserId.equals(currentUser.getUser().getId())){
+            System.out.println("You cannot select to transfer money from yourself.");
+        }
+        if (transferUserId != 0){
+            BigDecimal amount = consoleService.promptForBigDecimal("Enter amount: ");
+
+            Long accountFrom = moneyTransferService.getAccountByUserId(currentUserId).getAccount_id();
+            Long accountTo = moneyTransferService.getAccountByUserId(transferUserId).getAccount_id();
+
+            MoneyTransfer requestMoney = new MoneyTransfer(currentUserId, transferUserId, amount);
+            boolean success = moneyTransferService.request(requestMoney);
+            if (success) {
+                System.out.println("Request made successfully.");
+            }
+            else {
+                System.out.println("Request failed.");
+            }
+        }
 	}
 
     private boolean isUserIdValid(User[] users, Long sendUserId) {
