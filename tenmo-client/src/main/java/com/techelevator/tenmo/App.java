@@ -125,8 +125,13 @@ public class App {
         TransferDetail[] transferDetails = moneyTransferService.getPendingTransferDetails(currentUser.getUser().getId());
         consoleService.printPendingTransfers(transferDetails);
         Long transferId = consoleService.promptForLong("Please enter transfer ID to approve/reject (0 to cancel): ");
-        if (transferId == 0) {
-            System.out.println("Action canceled.");
+
+        if (transferId == 0L) {
+            System.out.println("Transfer canceled.");
+            return;
+        }
+
+        if (!isTransferIdValid(transferDetails, transferId)) {
             return;
         }
 
@@ -175,13 +180,13 @@ public class App {
         User[] users = moneyTransferService.getOtherUsers(currentUser.getUser().getId());
         consoleService.printUsers(users);
 
-        int choice = consoleService.promptForMenuSelection("Enter ID of user you are sending to (0 to cancel):");
-        if (choice == 0) {
+        Long userId = consoleService.promptForLong("Enter ID of user you are sending to (0 to cancel):");
+        if (userId == 0) {
             System.out.println("Transaction canceled.");
             return;
         }
-        Long sendToUserId = Long.valueOf(choice);
-        if (!isUserIdValid(users, sendToUserId)) {
+
+        if (!isUserIdValid(users, userId)) {
             return;
         }
 
@@ -191,7 +196,7 @@ public class App {
             return;
         }
 
-        MoneyTransfer sendMoney = new MoneyTransfer(currentUser.getUser().getId(), sendToUserId, amount);
+        MoneyTransfer sendMoney = new MoneyTransfer(currentUser.getUser().getId(), userId, amount);
         boolean success = moneyTransferService.send(sendMoney);
         if (success) {
             System.out.println("Money transferred successfully.");
