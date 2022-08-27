@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class App {
+
     private static final int APPROVED = 1;
     private static final int REJECTED = 2;
 
@@ -215,21 +216,33 @@ public class App {
 
 		Long fromUserId = consoleService.promptForLong("Enter Id of user you are requesting from (0 to cancel): ");
 
+        if (fromUserId == 0) {
+            System.out.println("Transaction canceled.");
+            return;
+        }
+
+        if (!isUserIdValid(users, fromUserId)) {
+            return;
+        }
+
         if (fromUserId.equals(currentUser.getUser().getId())){
             System.out.println("You cannot select to transfer money from yourself.");
         }
-        if (fromUserId != 0){
-            BigDecimal amount = consoleService.promptForBigDecimal("Enter amount: ");
+        BigDecimal zero = new BigDecimal("0.0");
+        BigDecimal amount = consoleService.promptForBigDecimal("Enter amount: ");
+        if (amount.compareTo(zero) <= 0) {
+            System.out.println("You have entered invalid amount.");
+            return;
+        }
 
-            Transfer requestMoney = new Transfer(getUser(users, fromUserId), currentUser.getUser(), "Request",
-                    "Pending", amount);
-            boolean success = transferService.request(requestMoney);
-            if (success) {
-                System.out.println("Request made successfully.");
-            }
-            else {
-                System.out.println("Request failed.");
-            }
+        Transfer requestMoney = new Transfer(getUser(users, fromUserId), currentUser.getUser(), "Request",
+                "Pending", amount);
+        boolean success = transferService.request(requestMoney);
+        if (success) {
+            System.out.println("Request made successfully.");
+        }
+        else {
+            System.out.println("Request failed.");
         }
 	}
 
@@ -279,7 +292,6 @@ public class App {
             System.out.println("You have insufficient fund.");
             return false;
         }
-
         return true;
     }
 }
