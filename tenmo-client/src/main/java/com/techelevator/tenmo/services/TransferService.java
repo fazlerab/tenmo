@@ -38,10 +38,10 @@ public class TransferService {
         return balance;
     }
 
-    public User[] getOtherUsers(Long myId) {
+    public User[] getOtherUsers(Long myUserId) {
         User[] otherUsers = null;
         try {
-            ResponseEntity<User[]> response = restTemplate.exchange(baseUrl + "otherUsers/" + myId,
+            ResponseEntity<User[]> response = restTemplate.exchange(baseUrl + "otherUsers/" + myUserId,
                     HttpMethod.GET, makeEntity(), User[].class);
             otherUsers = response.getBody();
         } catch (RestClientResponseException | ResourceAccessException e) {

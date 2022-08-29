@@ -31,15 +31,15 @@ public class TransferController {
         return transferDao.getBalanceByUserId(id);
     }
 
-    @GetMapping("/otherUsers/{myId}")
-    public TEUser[] getOtherUsers(@PathVariable Long myId) {
-        List<TEUser> teUsers = userDao.getOtherUsers(myId);
+    @GetMapping("/otherUsers/{myUserId}")
+    public TEUser[] getOtherUsers(@PathVariable Long myUserId) {
+        List<TEUser> teUsers = userDao.getOtherUsers(myUserId);
         return teUsers.toArray(new TEUser[teUsers.size()]);
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/send")
-    public boolean sendMoney(@RequestBody Transfer transfer) {
+    public boolean sendMoney(@RequestBody Transfer transfer) throws TenmoException {
         return transferDao.sendMoney(transfer);
     }
 

@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 public interface TransferDao {
     BigDecimal getBalanceByUserId(Long id);
 
-    boolean sendMoney(Transfer transfer);
+    boolean sendMoney(Transfer transfer) throws TenmoException;
 
     Transfer[] getTransfers(Long myUserId);
 

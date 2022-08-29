@@ -43,18 +43,22 @@ public class JdbcTransferDao implements TransferDao {
         return transfers.toArray(new Transfer[transfers.size()]);
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
-    public boolean sendMoney(Transfer transfer) {
+    public boolean sendMoney(Transfer transfer) throws TenmoException{
         Long transferTypeId = getTransferTypeId("Send");
-        Long tranferStatusId = getTransferStatusId("Approved");
+        Long transferStatusId = getTransferStatusId("Approved");
 
         Long fromAccountId = getAccountId(transfer.getFromUser().getId());
         Long toAccountId = getAccountId(transfer.getToUser().getId());
 
         BigDecimal amount = transfer.getAmount();
+        BigDecimal fromUserBalance = getBalanceByUserId(transfer.getFromUser().getId());
+        if (amount.compareTo(fromUserBalance) > 0) {
+            throw new InvalidTransferAmountException("Not enough balance to approve transfer.");
+        }
 
-        insertIntoTransfer(transferTypeId, tranferStatusId, fromAccountId, toAccountId, amount);
+        insertIntoTransfer(transferTypeId, transferStatusId, fromAccountId, toAccountId, amount);
         deductFromAccount(fromAccountId, amount);
         addToAccount(toAccountId, amount);
 
